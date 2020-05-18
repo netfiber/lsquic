@@ -17,7 +17,11 @@ lsquic_qhkdf_expand (const EVP_MD *md, const unsigned char *secret,
 #ifndef NDEBUG
     int s;
 #endif
+#ifndef WIN32
     unsigned char info[ 2 + 1 + 6 + label_len + 1];
+#else
+    unsigned char info[ 2 + 1 + 6 + UINT8_MAX + 1];
+#endif
 
     info[0] = out_len >> 8;
     info[1] = out_len;

@@ -79,7 +79,9 @@ SET(lsquic_STAT_SRCS
     lsquic_version.c
 )
 
+IF(NOT MSVC)
 set_source_files_properties(ls-qpack/lsqpack.c PROPERTIES COMPILE_FLAGS -Wno-uninitialized)
+ENDIF()
 
 include_directories(ls-qpack)
 

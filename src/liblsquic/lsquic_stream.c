@@ -3446,10 +3446,11 @@ send_headers_ietf (struct lsquic_stream *stream,
     unsigned char *header_block;
     enum lsqpack_enc_header_flags hflags;
     int rv;
+    const size_t buf_sz = max_push_size + max_prefix_size + MAX_HEADERS_SIZE;
 #ifndef WIN32
-    unsigned char buf[max_push_size + max_prefix_size + MAX_HEADERS_SIZE];
+    unsigned char buf[buf_sz];
 #else
-    unsigned char *buf = _malloca(max_push_size + max_prefix_size + MAX_HEADERS_SIZE);
+    unsigned char *buf = _malloca(buf_sz);
     if (!buf)
         return -1;
 #endif
@@ -3461,7 +3462,7 @@ send_headers_ietf (struct lsquic_stream *stream,
      * back to a larger buffer if that fails.
      */
     prefix_sz = max_prefix_size;
-    headers_sz = sizeof(buf) - max_prefix_size - max_push_size;
+    headers_sz = buf_sz - max_prefix_size - max_push_size;
     qwh = lsquic_qeh_write_headers(stream->conn_pub->u.ietf.qeh, stream->id, 0,
                 headers, buf + max_push_size + max_prefix_size, &prefix_sz,
                 &headers_sz, &stream->sm_hb_compl, &hflags);

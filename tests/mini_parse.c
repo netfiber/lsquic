@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #ifndef WIN32
+#include <fcntl.h>
 #include <unistd.h>
 #else
 #include "getopt.h"

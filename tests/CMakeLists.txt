@@ -110,7 +110,7 @@ ENDIF()
 ADD_EXECUTABLE(test_min_heap test_min_heap.c ../src/liblsquic/lsquic_min_heap.c)
 ADD_TEST(min_heap test_min_heap)
 
-SET(MALO_SRC test_malo.c ../src/liblsquic/lsquic_malo.c ../wincompat/getopt.c)
+SET(MALO_SRC test_malo.c ../src/liblsquic/lsquic_malo.c)
 IF(MSVC)
     LIST(APPEND MALO_SRC ../wincompat/getopt.c)
 ENDIF()

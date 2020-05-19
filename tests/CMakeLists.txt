@@ -110,12 +110,16 @@ ENDIF()
 ADD_EXECUTABLE(test_min_heap test_min_heap.c ../src/liblsquic/lsquic_min_heap.c)
 ADD_TEST(min_heap test_min_heap)
 
-ADD_EXECUTABLE(test_malo_pooled test_malo.c ../src/liblsquic/lsquic_malo.c)
+SET(MALO_SRC test_malo.c ../src/liblsquic/lsquic_malo.c ../wincompat/getopt.c)
+IF(MSVC)
+    LIST(APPEND MALO_SRC ../wincompat/getopt.c)
+ENDIF()
+ADD_EXECUTABLE(test_malo_pooled ${MALO_SRC})
 SET_TARGET_PROPERTIES(test_malo_pooled
     PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS} -DLSQUIC_USE_POOLS=1")
 ADD_TEST(malo_pooled test_malo_pooled)
 
-ADD_EXECUTABLE(test_malo_nopool test_malo.c ../src/liblsquic/lsquic_malo.c)
+ADD_EXECUTABLE(test_malo_nopool ${MALO_SRC})
 SET_TARGET_PROPERTIES(test_malo_nopool
     PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS} -DLSQUIC_USE_POOLS=0")
 ADD_TEST(malo_nopool test_malo_nopool)

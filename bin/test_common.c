@@ -520,7 +520,9 @@ read_one_packet (struct read_iter *iter)
     packs_in->vecs[iter->ri_idx].len = MAX_PACKET_SZ;
 #endif
 
+#ifndef WIN32
   top:
+#endif
     ctl_buf = packs_in->ctlmsg_data + iter->ri_idx * CTL_SZ;
 
 #ifndef WIN32
@@ -799,7 +801,11 @@ sport_init_server (struct service_port *sport, struct lsquic_engine *engine,
                    struct event_base *eb)
 {
     const struct sockaddr *sa_local = (struct sockaddr *) &sport->sas;
-    int sockfd, saved_errno, flags, s, on;
+    int sockfd, saved_errno, s;
+#ifndef WIN32
+    int flags;
+#endif
+    SOCKOPT_VAL on;
     socklen_t socklen;
     char addr_str[0x20];
 
@@ -829,6 +835,7 @@ sport_init_server (struct service_port *sport, struct lsquic_engine *engine,
     }
 
     /* Make socket non-blocking */
+#ifndef WIN32
     flags = fcntl(sockfd, F_GETFL);
     if (-1 == flags) {
         saved_errno = errno;
@@ -843,6 +850,12 @@ sport_init_server (struct service_port *sport, struct lsquic_engine *engine,
         errno = saved_errno;
         return -1;
     }
+#else
+    {
+        u_long on = 1;
+        ioctlsocket(sockfd, FIONBIO, &on);
+    }
+#endif
 
     on = 1;
     if (AF_INET == sa_local->sa_family)
@@ -856,7 +869,14 @@ sport_init_server (struct service_port *sport, struct lsquic_engine *engine,
 #endif
                                                                &on, sizeof(on));
     else
+    {
+#ifndef WIN32
         s = setsockopt(sockfd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on));
+#else
+        s = setsockopt(sockfd, IPPROTO_IPV6, IPV6_PKTINFO, &on, sizeof(on));
+#endif
+    }
+
     if (0 != s)
     {
         saved_errno = errno;
@@ -865,7 +885,7 @@ sport_init_server (struct service_port *sport, struct lsquic_engine *engine,
         return -1;
     }
 
-#if (__linux__ && !defined(IP_RECVORIGDSTADDR)) || __APPLE__
+#if (__linux__ && !defined(IP_RECVORIGDSTADDR)) || __APPLE__ || defined(WIN32)
     /* Need to set IP_PKTINFO for sending */
     if (AF_INET == sa_local->sa_family)
     {
@@ -1527,6 +1547,7 @@ send_packets_one_by_one (const struct lsquic_out_spec *specs, unsigned count)
 #else
     DWORD bytes;
     WSAMSG msg;
+    WSABUF wsaBuf;
 #endif
     union {
         /* cmsg(3) recommends union for proper alignment */
@@ -1589,12 +1610,14 @@ send_packets_one_by_one (const struct lsquic_out_spec *specs, unsigned count)
         msg.msg_iovlen     = specs[n].iovlen;
         msg.msg_flags      = 0;
 #else
+        wsaBuf.buf = specs[n].iov->iov_base;
+        wsaBuf.len = specs[n].iov->iov_len;
         msg.name           = (void *) specs[n].dest_sa;
         msg.namelen        = (AF_INET == specs[n].dest_sa->sa_family ?
                                             sizeof(struct sockaddr_in) :
-                                            sizeof(struct sockaddr_in6)),
-        msg.lpBuffers      = specs[n].iov;
-        msg.dwBufferCount  = specs[n].iovlen;
+                                            sizeof(struct sockaddr_in6));
+        wsaBuf.buf = specs[n].iov->iov_base;
+        wsaBuf.len = specs[n].iov->iov_len;
         msg.dwFlags        = 0;
 #endif
         if ((sport->sp_flags & SPORT_SERVER) && specs[n].local_sa->sa_family)

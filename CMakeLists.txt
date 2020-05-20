@@ -237,11 +237,14 @@ ENDIF()
 ENDIF()	# LSQUIC_BIN OR LSQUIC_TESTS
 
 IF(LSQUIC_BIN)
-add_executable(http_server bin/http_server.c bin/prog.c bin/test_common.c bin/test_cert.c)
-add_executable(md5_server bin/md5_server.c bin/prog.c bin/test_common.c bin/test_cert.c)
-add_executable(md5_client bin/md5_client.c bin/prog.c bin/test_common.c bin/test_cert.c)
-add_executable(echo_server bin/echo_server.c bin/prog.c bin/test_common.c bin/test_cert.c)
-add_executable(echo_client bin/echo_client.c bin/prog.c bin/test_common.c bin/test_cert.c)
+IF(MSVC)
+    SET(GETOPT_C wincompat/getopt.c)
+ENDIF()
+add_executable(http_server bin/http_server.c bin/prog.c bin/test_common.c bin/test_cert.c ${GETOPT_C})
+add_executable(md5_server bin/md5_server.c bin/prog.c bin/test_common.c bin/test_cert.c ${GETOPT_C})
+add_executable(md5_client bin/md5_client.c bin/prog.c bin/test_common.c bin/test_cert.c ${GETOPT_C})
+add_executable(echo_server bin/echo_server.c bin/prog.c bin/test_common.c bin/test_cert.c ${GETOPT_C})
+add_executable(echo_client bin/echo_client.c bin/prog.c bin/test_common.c bin/test_cert.c ${GETOPT_C})
 
 
 IF (NOT MSVC)

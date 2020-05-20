@@ -16,7 +16,8 @@
 #ifndef WIN32
 #include <unistd.h>
 #else
-#include <getopt.h>
+#include "vc_compat.h"
+#include "getopt.h"
 #pragma warning(disable:4028)
 #endif// WIN32
 
@@ -215,8 +216,10 @@ prog_print_common_options (const struct prog *prog, FILE *out)
 int
 prog_set_opt (struct prog *prog, int opt, const char *arg)
 {
+#ifndef WIN32
     struct stat st;
     int s;
+#endif
 
     switch (opt)
     {

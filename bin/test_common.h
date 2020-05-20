@@ -10,6 +10,12 @@
 #   include <net/if.h>  /* For IFNAMSIZ */
 #endif
 
+#ifdef WIN32
+#define SOCKOPT_VAL char
+#else
+#define SOCKOPT_VAL int
+#endif
+
 struct lsquic_engine;
 struct lsquic_engine_settings;
 struct lsquic_out_spec;
@@ -51,8 +57,8 @@ struct service_port {
     struct sockaddr_storage    sp_local_addr;
     struct packets_in         *packs_in;
     enum sport_flags           sp_flags;
-    int                        sp_sndbuf;   /* If SPORT_SET_SNDBUF is set */
-    int                        sp_rcvbuf;   /* If SPORT_SET_RCVBUF is set */
+    SOCKOPT_VAL                sp_sndbuf;   /* If SPORT_SET_SNDBUF is set */
+    SOCKOPT_VAL                sp_rcvbuf;   /* If SPORT_SET_RCVBUF is set */
     struct prog               *sp_prog;
     unsigned char             *sp_token_buf;
     size_t                     sp_token_sz;

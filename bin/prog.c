@@ -53,6 +53,10 @@ prog_init (struct prog *prog, unsigned flags,
            struct sport_head *sports,
            const struct lsquic_stream_if *stream_if, void *stream_if_ctx)
 {
+#ifdef WIN32
+    WSADATA wsd;
+    WSAStartup(MAKEWORD(2, 2), &wsd);
+#endif
     /* prog-specific initialization: */
     memset(prog, 0, sizeof(*prog));
     prog->prog_engine_flags = flags;

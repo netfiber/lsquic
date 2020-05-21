@@ -264,6 +264,7 @@ add_executable(http_client
     bin/http_client.c
     bin/prog.c
     bin/test_common.c
+    bin/test_cert.c
     wincompat/getopt.c
     wincompat/getopt1.c
 )

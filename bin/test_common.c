@@ -1616,8 +1616,8 @@ send_packets_one_by_one (const struct lsquic_out_spec *specs, unsigned count)
         msg.namelen        = (AF_INET == specs[n].dest_sa->sa_family ?
                                             sizeof(struct sockaddr_in) :
                                             sizeof(struct sockaddr_in6));
-        wsaBuf.buf = specs[n].iov->iov_base;
-        wsaBuf.len = specs[n].iov->iov_len;
+        msg.dwBufferCount  = 1;
+        msg.lpBuffers      = &wsaBuf;
         msg.dwFlags        = 0;
 #endif
         if ((sport->sp_flags & SPORT_SERVER) && specs[n].local_sa->sa_family)

@@ -10,14 +10,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/queue.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <regex.h>
-#include <netinet/in.h>
 #include <inttypes.h>
+
+#ifndef WIN32
+#include <netinet/in.h>
+#include <unistd.h>
+#include <fcntl.h>
+#else
+#include "vc_compat.h"
+#include "getopt.h"
+#endif
 
 #include <event2/event.h>
 
@@ -29,12 +34,18 @@
 #include "test_common.h"
 #include "prog.h"
 
+#if HAVE_REGEX
+#include <regex.h>
+#endif
+
 #include "../src/liblsquic/lsquic_logger.h"
 #include "../src/liblsquic/lsquic_int_types.h"
 #include "../src/liblsquic/lsquic_util.h"
 
+#if HAVE_REGEX
 static const char on_being_idle[];
 static const size_t IDLE_SIZE;
+#endif
 
 /* This is the "LSWS" mode: first write is performed immediately, outside
  * of the on_write() callback.  This makes it possible to play with buffered
@@ -301,7 +312,7 @@ send_headers (struct lsquic_stream *stream, lsquic_stream_ctx_t *st_h)
 
 
 static void
-resume_response (int fd, short what, void *arg)
+resume_response (evutil_socket_t fd, short what, void *arg)
 {
     struct lsquic_stream_ctx *const st_h = arg;
 
@@ -605,7 +616,6 @@ push_promise (lsquic_stream_ctx_t *st_h, lsquic_stream_t *stream)
 
     return 0;
 }
-#endif
 
 
 static void
@@ -641,7 +651,6 @@ static void
 http_server_on_read_regular (struct lsquic_stream *stream,
                                                     lsquic_stream_ctx_t *st_h)
 {
-#if HAVE_OPEN_MEMSTREAM
     unsigned char buf[0x400];
     ssize_t nread;
     int s;
@@ -674,20 +683,22 @@ http_server_on_read_regular (struct lsquic_stream *stream,
         LSQ_ERROR("error reading: %s", strerror(errno));
         lsquic_stream_close(stream);
     }
-#else
-    LSQ_ERROR("%s: open_memstream not supported\n", __func__);
-    exit(1);
-#endif
 }
+#endif
 
 
 static void
 http_server_on_read (struct lsquic_stream *stream, lsquic_stream_ctx_t *st_h)
 {
+#if HAVE_OPEN_MEMSTREAM
     if (lsquic_stream_is_pushed(stream))
         http_server_on_read_pushed(stream, st_h);
     else
         http_server_on_read_regular(stream, st_h);
+#else
+    LSQ_ERROR("%s: open_memstream not supported\n", __func__);
+    exit(1);
+#endif
 }
 
 
@@ -716,6 +727,7 @@ const struct lsquic_stream_if http_server_if = {
 };
 
 
+#if HAVE_REGEX
 struct req_map
 {
     enum method             method;
@@ -1243,6 +1255,7 @@ const struct lsquic_stream_if interop_http_server_if = {
     .on_write               = http_server_interop_on_write,
     .on_close               = http_server_on_close,
 };
+#endif /* HAVE_REGEX */
 
 
 static void
@@ -1306,6 +1319,23 @@ interop_server_hset_prepare_decode (void *hset_p, struct lsxpack_header *xhdr,
                 req->decode_off, sizeof(req->decode_buf) - req->decode_off);
     return &req->xhdr;
 }
+
+
+#ifdef WIN32
+char *
+strndup (const char *s, size_t n)
+{
+    char *copy;
+
+    copy = malloc(n + 1);
+    if (!copy)
+        return NULL;
+
+    memcpy(copy, s, n);
+    copy[n] = '\0';
+    return copy;
+}
+#endif
 
 
 static int
@@ -1450,11 +1480,16 @@ main (int argc, char **argv)
 
     if (!server_ctx.document_root)
     {
+#if HAVE_REGEX
         LSQ_NOTICE("Document root is not set: start in Interop Mode");
         init_map_regexes();
         prog.prog_api.ea_stream_if = &interop_http_server_if;
         prog.prog_api.ea_hsi_if = &header_bypass_api;
         prog.prog_api.ea_hsi_ctx = NULL;
+#else
+        LSQ_ERROR("Document root is not set: use -r option");
+        exit(EXIT_FAILURE);
+#endif
     }
 
     if (0 != prog_prep(&prog))
@@ -1475,6 +1510,7 @@ main (int argc, char **argv)
 }
 
 
+#if HAVE_REGEX
 static const char on_being_idle[] =
 "ON BEING IDLE.\n"
 "\n"
@@ -1698,3 +1734,4 @@ static const char on_being_idle[] =
 "\n\n\n"
 ;
 static const size_t IDLE_SIZE = sizeof(on_being_idle) - 1;
+#endif

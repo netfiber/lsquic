@@ -692,7 +692,7 @@ lsquic_tp_to_str (const struct transport_params *params, char *buf, size_t sz)
         }
     if (lsquic_tp_has_pref_ipv4(params))
     {
-#ifdef MSVC
+#ifdef _MSC_VER
     /* Odd: for some reason compiler used at AppVeyor complains with C4090 */
 #define NTOP_CAST (void *)
 #else

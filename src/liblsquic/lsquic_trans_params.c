@@ -692,7 +692,13 @@ lsquic_tp_to_str (const struct transport_params *params, char *buf, size_t sz)
         }
     if (lsquic_tp_has_pref_ipv4(params))
     {
-        if (inet_ntop(AF_INET, (void *) params->tp_preferred_address.ipv4_addr,
+#ifdef MSVC
+    /* Odd: for some reason compiler used at AppVeyor complains with C4090 */
+#define NTOP_CAST (void *)
+#else
+#define NTOP_CAST
+#endif
+        if (inet_ntop(AF_INET, NTOP_CAST params->tp_preferred_address.ipv4_addr,
                                                 addr_str, sizeof(addr_str)))
         {
             nw = snprintf(buf, end - buf, "; IPv4 preferred address: %s:%u",
@@ -704,7 +710,7 @@ lsquic_tp_to_str (const struct transport_params *params, char *buf, size_t sz)
     }
     if (lsquic_tp_has_pref_ipv6(params))
     {
-        if (inet_ntop(AF_INET6, params->tp_preferred_address.ipv6_addr,
+        if (inet_ntop(AF_INET6, NTOP_CAST params->tp_preferred_address.ipv6_addr,
                                                 addr_str, sizeof(addr_str)))
         {
             nw = snprintf(buf, end - buf, "; IPv6 preferred address: %s:%u",
@@ -1195,7 +1201,7 @@ lsquic_tp_to_str_27 (const struct transport_params *params, char *buf, size_t sz
     }
     if (lsquic_tp_has_pref_ipv4(params))
     {
-        if (inet_ntop(AF_INET, params->tp_preferred_address.ipv4_addr,
+        if (inet_ntop(AF_INET, NTOP_CAST params->tp_preferred_address.ipv4_addr,
                                                 addr_str, sizeof(addr_str)))
         {
             nw = snprintf(buf, end - buf, "; IPv4 preferred address: %s:%u",
@@ -1207,7 +1213,7 @@ lsquic_tp_to_str_27 (const struct transport_params *params, char *buf, size_t sz
     }
     if (lsquic_tp_has_pref_ipv6(params))
     {
-        if (inet_ntop(AF_INET6, params->tp_preferred_address.ipv6_addr,
+        if (inet_ntop(AF_INET6, NTOP_CAST params->tp_preferred_address.ipv6_addr,
                                                 addr_str, sizeof(addr_str)))
         {
             nw = snprintf(buf, end - buf, "; IPv6 preferred address: %s:%u",

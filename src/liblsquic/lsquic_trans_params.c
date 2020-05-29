@@ -692,7 +692,7 @@ lsquic_tp_to_str (const struct transport_params *params, char *buf, size_t sz)
         }
     if (lsquic_tp_has_pref_ipv4(params))
     {
-        if (inet_ntop(AF_INET, params->tp_preferred_address.ipv4_addr,
+        if (inet_ntop(AF_INET, (void *) params->tp_preferred_address.ipv4_addr,
                                                 addr_str, sizeof(addr_str)))
         {
             nw = snprintf(buf, end - buf, "; IPv4 preferred address: %s:%u",

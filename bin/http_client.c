@@ -1426,10 +1426,6 @@ main (int argc, char **argv)
     client_ctx.hcc_reset_after_nbytes = 0;
     client_ctx.hcc_retire_cid_after_nbytes = 0;
     client_ctx.prog = &prog;
-#ifdef WIN32
-    WSADATA wsd;
-    WSAStartup(MAKEWORD(2, 2), &wsd);
-#endif
 
     prog_init(&prog, LSENG_HTTP, &sports, &http_client_if, &client_ctx);
 

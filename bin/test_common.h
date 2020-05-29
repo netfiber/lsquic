@@ -20,6 +20,18 @@ struct lsquic_conn;
 struct prog;
 struct reader_ctx;
 
+#ifndef WIN32
+#   define SOCKOPT_VAL int
+#   define SOCKET_TYPE int
+#   define CLOSE_SOCKET close
+#   define CHAR_CAST
+#else
+#   define SOCKOPT_VAL DWORD
+#   define SOCKET_TYPE SOCKET
+#   define CLOSE_SOCKET closesocket
+#   define CHAR_CAST (char *)
+#endif
+
 enum sport_flags
 {
 #if LSQUIC_DONTFRAG_SUPPORTED
@@ -51,8 +63,8 @@ struct service_port {
     struct sockaddr_storage    sp_local_addr;
     struct packets_in         *packs_in;
     enum sport_flags           sp_flags;
-    int                        sp_sndbuf;   /* If SPORT_SET_SNDBUF is set */
-    int                        sp_rcvbuf;   /* If SPORT_SET_RCVBUF is set */
+    SOCKOPT_VAL                sp_sndbuf;   /* If SPORT_SET_SNDBUF is set */
+    SOCKOPT_VAL                sp_rcvbuf;   /* If SPORT_SET_RCVBUF is set */
     struct prog               *sp_prog;
     unsigned char             *sp_token_buf;
     size_t                     sp_token_sz;
